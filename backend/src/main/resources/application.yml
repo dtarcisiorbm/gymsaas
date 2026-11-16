@@ -1,0 +1,94 @@
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+  error:
+    include-stacktrace: never
+    include-message: never
+
+spring:
+  application:
+    name: gymsaas-backend
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/gymsaas}
+    username: ${DB_USER:gymsaas_app}
+    password: ${DB_PASSWORD:gymsaas_app_pw}
+    hikari:
+      maximum-pool-size: ${DB_POOL_SIZE:10}
+      minimum-idle: 2
+      connection-timeout: 5000
+      validation-timeout: 3000
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+        format_sql: false
+  flyway:
+    enabled: true
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/gymsaas}
+    user: ${FLYWAY_USER:gymsaas_owner}
+    password: ${FLYWAY_PASSWORD:gymsaas_owner_pw}
+    locations: classpath:db/migration
+    validate-on-migrate: true
+    baseline-on-migrate: false
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: never
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  security:
+    jwt:
+      issuer: ${JWT_ISSUER:gymsaas}
+      audience: ${JWT_AUDIENCE:gymsaas-api}
+      access-token-ttl: PT15M
+      refresh-token-ttl: P30D
+      private-key: ${JWT_PRIVATE_KEY:}
+      public-key: ${JWT_PUBLIC_KEY:}
+    cors:
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000}
+    cookie:
+      secure: ${COOKIE_SECURE:false}
+      same-site: Lax
+      name: gymsaas_refresh_token
+  demo-data:
+    enabled: ${DEMO_DATA_ENABLED:false}
+  tenancy:
+    header-name: X-Tenant-Id
+  storage:
+    contracts:
+      # Contract PDFs (never stored in the database). Mounted as a volume in Docker.
+      base-dir: ${CONTRACT_STORAGE_DIR:./data/contracts}
+  memberships:
+    lifecycle:
+      # Date-driven transitions (PENDING->ACTIVE, freeze end, ACTIVE->EXPIRED), per tenant time zone.
+      enabled: ${MEMBERSHIP_LIFECYCLE_ENABLED:true}
+      cron: ${MEMBERSHIP_LIFECYCLE_CRON:0 5 * * * *}
+
+logging:
+  level:
+    root: INFO
+    com.gymsaas: INFO
+    org.flywaydb: INFO

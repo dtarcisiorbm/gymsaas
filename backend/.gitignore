@@ -1,0 +1,10 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+*.log
+.idea/
+*.iml
+.vscode/
+
+# Phase 5: locally generated contract PDFs
+data/

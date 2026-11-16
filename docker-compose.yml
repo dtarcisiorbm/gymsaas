@@ -1,0 +1,88 @@
+name: gymsaas
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gymsaas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-gymsaas}
+      POSTGRES_USER: ${POSTGRES_OWNER_USER:-gymsaas_owner}
+      POSTGRES_PASSWORD: ${POSTGRES_OWNER_PASSWORD:-gymsaas_owner_pw}
+      APP_DB_USER: ${POSTGRES_APP_USER:-gymsaas_app}
+      APP_DB_PASSWORD: ${POSTGRES_APP_PASSWORD:-gymsaas_app_pw}
+      TZ: UTC
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_OWNER_USER:-gymsaas_owner} -d ${POSTGRES_DB:-gymsaas}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    networks:
+      - gymsaas
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gymsaas-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-gymsaas}
+      DB_USER: ${POSTGRES_APP_USER:-gymsaas_app}
+      DB_PASSWORD: ${POSTGRES_APP_PASSWORD:-gymsaas_app_pw}
+      FLYWAY_USER: ${POSTGRES_OWNER_USER:-gymsaas_owner}
+      FLYWAY_PASSWORD: ${POSTGRES_OWNER_PASSWORD:-gymsaas_owner_pw}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      DEMO_DATA_ENABLED: ${DEMO_DATA_ENABLED:-true}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75}
+      CONTRACT_STORAGE_DIR: /app/data/contracts
+    volumes:
+      - contract_storage:/app/data/contracts
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    networks:
+      - gymsaas
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    container_name: gymsaas-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    networks:
+      - gymsaas
+
+volumes:
+  postgres_data:
+    name: gymsaas_postgres_data
+  contract_storage:
+    name: gymsaas_contract_storage
+
+networks:
+  gymsaas:
+    name: gymsaas_network
+    driver: bridge
