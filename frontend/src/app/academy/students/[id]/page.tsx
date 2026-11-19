@@ -69,6 +69,8 @@ export default function StudentDetailPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Link href={`/academy/memberships?studentId=${id}`} className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white">Matrículas</Link>
+              <Link href={`/academy/memberships/new?studentId=${id}`} className="rounded-xl border border-accent-500/30 bg-accent-500/10 px-4 py-2 text-sm font-semibold text-accent-400 transition hover:bg-accent-500/20">Nova matrícula</Link>
               <Link href={`/academy/students/${id}/edit`} className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white">Editar</Link>
               <Link href="/academy/students" className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white">Voltar</Link>
             </div>

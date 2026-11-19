@@ -11,7 +11,16 @@ import type { MeResponse, TenantView } from "@/features/auth/model/types";
 class AuthRepository {
   /** Rehydrates the in-memory access token from the HttpOnly refresh cookie. */
   async bootstrap(): Promise<void> {
-    await refreshSession();
+    const restored = await refreshSession();
+    // The refresh response carries no permissions; without /me a full page
+    // reload would leave the nav and permission-gated actions empty.
+    if (restored && sessionManager.getSnapshot().activeTenantId) {
+      try {
+        await this.me();
+      } catch {
+        // Permissions stay empty; the backend still enforces every request.
+      }
+    }
   }
 
   async login(email: string, password: string): Promise<{ needsTenantSelection: boolean }> {

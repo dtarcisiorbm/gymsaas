@@ -47,7 +47,7 @@ docker-compose.yml
 - Tema claro/escuro com toggle persistido, aplicado globalmente.
 
 
-## Fase 5 — planos, matrículas e contratos (backend)
+## Fase 5 — planos, matrículas e contratos
 
 - Módulos `com.gymsaas.plan`, `com.gymsaas.membership` e `com.gymsaas.contract` (Clean Architecture).
 - Preço sempre calculado no backend e congelado na matrícula (snapshot imutável por trigger); histórico de preços imutável.
@@ -55,7 +55,12 @@ docker-compose.yml
 - Congelamento estende a vigência; limites por plano. Renovação cria nova matrícula com o preço vigente.
 - Contrato versionado com SHA-256; PDF (OpenPDF) em volume `gymsaas_contract_storage`; aceite simples (não é assinatura digital qualificada).
 - Job horário (`app.memberships.lifecycle.cron`) ativa/expira matrículas no fuso do tenant (`tenants.timezone`).
-- Endpoints, permissões e regras: `docs/specs/2026-11-13-phase5-final-report.md`. Frontend da Fase 5 pendente.
+- Endpoints, permissões e regras: `docs/specs/2026-11-13-phase5-final-report.md`.
+- Frontend (MVVM, `features/plans|memberships|contracts`): `/academy/plans` (preços programados, benefícios
+  tipados, status), `/academy/memberships` (filtros por status/plano/unidade/vencimento),
+  `/academy/memberships/new` (resumo calculado pelo backend antes de confirmar), detalhe com congelar,
+  descongelar, suspender, reativar, renovar, cancelar e histórico, e `/academy/contracts/{id}` (PDF autenticado
+  e aceite presencial com SHA-256 do conteúdo verificado no navegador). Ações aparecem conforme as permissões.
 
 ## Subir a stack
 

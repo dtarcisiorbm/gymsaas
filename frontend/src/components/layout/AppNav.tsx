@@ -28,6 +28,12 @@ export function AppNav() {
   ) {
     items.push({ href: "/academy/students", label: "Alunos" });
   }
+  if (session.activeTenantId && (permissions.has("plans:read") || permissions.has("plan:read") || session.platformAdmin)) {
+    items.push({ href: "/academy/plans", label: "Planos" });
+  }
+  if (session.activeTenantId && (permissions.has("memberships:read") || session.platformAdmin)) {
+    items.push({ href: "/academy/memberships", label: "Matrículas" });
+  }
   if (session.activeTenantId && (permissions.has("users:read") || session.platformAdmin)) {
     items.push({ href: "/academy/users", label: "Usuários" });
   }

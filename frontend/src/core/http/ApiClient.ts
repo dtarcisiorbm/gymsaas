@@ -65,6 +65,21 @@ export const apiClient = {
     return (text ? JSON.parse(text) : undefined) as T;
   },
 
+  /** Authenticated binary download (e.g. contract PDF); the token never goes in the URL. */
+  async download(path: string): Promise<Blob> {
+    let response = await execute(path, { method: "GET" });
+    if (response.status === 401) {
+      const refreshed = await refreshSession();
+      if (refreshed) {
+        response = await execute(path, { method: "GET" });
+      }
+    }
+    if (!response.ok) {
+      throw await parseError(response);
+    }
+    return response.blob();
+  },
+
   get<T>(path: string): Promise<T> {
     return this.request<T>(path, { method: "GET" });
   },

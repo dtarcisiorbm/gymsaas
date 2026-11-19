@@ -71,8 +71,8 @@ Concessões: TENANT_ADMIN e BRANCH_MANAGER têm `memberships:*`/`contracts:*` (B
 - Cobertura dos cenários pedidos: planos, preços, histórico, vigência (mensal/trimestral/semestral/anual/custom, dia 31, fevereiro, bissexto, renovação sem deriva, congelamento), matrículas, renovação, cancelamento, congelamento, contratos, aceite, isolamento multi-tenant (API + RLS real não vazio + FK composta), constraints (imutabilidade, sobreposição, append-only), concorrência (matrículas, congelamentos e aceites simultâneos), permissões (403).
 
 ## 9. Pendências
-- **Frontend da Fase 5** (módulos `plans`, `memberships`, `contracts`) — adiado pelo usuário.
-- Smoke no Docker Compose não executado (imagem do backend precisa ser reconstruída; banco local está em V7 e receberá V8–V12).
+- ~~Frontend da Fase 5~~ — concluído em 2026-11-17 (§11).
+- ~~Smoke no Docker Compose~~ — executado em 2026-11-17 (§11).
 - Edição de `tenants.timezone` pela API de academia não foi exposta (usa o default `America/Sao_Paulo`); fuso por unidade (`branch_settings.timezone`) não é usado.
 - Arquivos PDF órfãos em caso de rollback após gravação (raro): rotina de limpeza não implementada.
 - Storage S3/MinIO: porta pronta, adapter não implementado.
@@ -89,7 +89,25 @@ Concessões: TENANT_ADMIN e BRANCH_MANAGER têm `memberships:*`/`contracts:*` (B
 - [x] TenantContext, RBAC, RLS, FKs compostas, auditoria
 - [x] Migrations novas sem alterar aplicadas
 - [x] Testes unitários e de integração executados e verdes
-- [ ] Frontend (adiado)
-- [ ] Smoke Docker Compose
+- [x] Frontend (2026-11-17 — ver §11)
+- [x] Smoke Docker Compose (2026-11-17 — ver §11)
+
+## 11. Complemento 2026-11-17 — frontend e smoke
+
+- Frontend MVVM: `features/plans`, `features/memberships`, `features/contracts` (model/data/viewmodel) e rotas
+  `/academy/plans`, `/academy/plans/[id]`, `/academy/memberships`, `/academy/memberships/new`,
+  `/academy/memberships/[id]`, `/academy/contracts/[id]`; itens "Planos" e "Matrículas" no menu; atalhos na
+  página do aluno. Dinheiro trafega como string decimal; datas `LocalDate` formatadas sem conversão de fuso.
+- Aceite: o navegador calcula SHA-256 (UTF-8) do conteúdo exibido e envia esse hash; se divergir do servidor, o
+  aceite é bloqueado. Sem HTTPS (SubtleCrypto indisponível) usa o hash do servidor e avisa na tela.
+- Correção transversal: `AuthRepository.bootstrap()` passou a carregar `/api/auth/me` após restaurar a sessão;
+  antes, um recarregamento de página deixava o menu e as ações dependentes de permissão vazios.
+- Verificação: `tsc --noEmit` e `next build` sem erros; `docker compose up -d --build` com backend saudável e
+  Flyway em V12 (V8–V12 já estavam aplicadas desde 2026-11-15); smoke E2E via API — 28/28 verificações
+  (plano, preços, benefícios, cotação, matrícula, congelamento, contrato, PDF com hash, aceite, rejeição de hash
+  inválido, renovação, cancelamento, 403 da recepção, 6 rotas do frontend). Verificação em navegador: menu,
+  ações por permissão após reload, detalhe da matrícula e verificação local do hash do contrato. O fluxo de
+  cotação/criação pela UI não foi exercitado no navegador (coberto apenas pela API).
+- Dados de teste do smoke ficaram no banco local de demonstração (plano `SMOKE-*`, aluno "Aluno Smoke *").
 
 **Não avançar para a Fase 6 sem aprovação.**

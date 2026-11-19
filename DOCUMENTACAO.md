@@ -34,7 +34,7 @@ O GymSaaS é um sistema de gestão para redes/academias com múltiplas unidades 
 - **RBAC**: papéis e permissões granulares por academia, com administrador de plataforma.
 - **Gestão administrativa**: academias (plataforma), unidades, usuários/papéis/vínculos.
 - **Gestão de alunos**: cadastro completo, documentos, contatos, endereço, vínculos com unidades, transferências, histórico e observações (Fase 4).
-- **Planos, matrículas e contratos (backend)**: módulos de domínio/aplicação/infra/apresentação, regras de vigência, congelamento, renovação, versionamento de contrato/PDF e aceite simples (Fase 5 — backend; frontend dedicado pendente conforme estado atual do repositório).
+- **Planos, matrículas e contratos (backend)**: módulos de domínio/aplicação/infra/apresentação, regras de vigência, congelamento, renovação, versionamento de contrato/PDF e aceite simples (Fase 5 — backend e frontend: telas de planos, matrículas e contratos em `/academy/plans`, `/academy/memberships` e `/academy/contracts/{id}`).
 
 **Objetivo de longo prazo (conforme documentação do projeto):** evolução para operação completa de academias, incluindo módulos financeiros e integrações (ex.: controle de acesso/catracas/biometria em terminais Control iD) em fases futuras.
 
@@ -145,7 +145,7 @@ O GymSaaS é um sistema de gestão para redes/academias com múltiplas unidades 
 - **Matrículas**: cotação (`quote`) e criação com snapshot de condições/preço calculado no backend, atualização operacional, renovação (nova matrícula vinculada), cancelamento, suspensão/reativação, congelamento/descongelamento, histórico; regras de vigência e impactos conforme domínio implementado.
 - **Contratos**: geração versionada por matrícula, histórico, consulta, download de PDF (armazenado fora do banco, volume dedicado) com integridade (hash) e registro de **aceite simples** (evidências; não constitui assinatura digital qualificada).
 - **Job de ciclo de vida**: processamento agendado de matrículas (ativação/expiração/descongelamento conforme configuração) considerando fuso do tenant.
-- *Observação*: o frontend possui telas consolidadas até a gestão de alunos; interfaces dedicadas de planos/matrículas/contratos podem estar pendentes conforme evolução do repositório.
+- *Frontend*: `/academy/plans`, `/academy/memberships` e `/academy/contracts/{id}`.
 
 ---
 
@@ -227,6 +227,9 @@ Migrations Flyway em `backend/src/main/resources/db/migration` (aplicar sempre v
 | `/academy/students/new` | Cadastro de aluno | conforme permissão |
 | `/academy/students/[id]` | Detalhe do aluno (abas) | conforme permissão |
 | `/academy/students/[id]/edit` | Edição do aluno | conforme permissão |
+| `/academy/plans`, `/academy/plans/[id]` | Planos e preços | `plans:read` |
+| `/academy/memberships`, `/new`, `/[id]` | Matrículas | `memberships:read` |
+| `/academy/contracts/[id]` | Contrato, PDF e aceite | `contracts:read` |
 
 ### Características de UX
 - Layout responsivo, estados de carregamento/vazio/erro, paginação e filtros onde aplicável.
@@ -331,7 +334,7 @@ Baseie-se em `.env.example`. Principais variáveis:
 ## Testes
 
 - **Unitários:** validações/utilitários, codecs/tokens, regras de domínio e fronteiras arquiteturais (ex.: ArchUnit), entre outros.
-- **Integração (`*IT`) com Testcontainers:** execução contra PostgreSQL real (role de runtime) cobrindo autenticação/sessão, RBAC, RLS/isolamento multi-tenant, gestão de tenants/branches/usuários e módulo de alunos (incluindo cenários de concorrência e constraints).
+- **Integração (`*IT`) com Testcontainers:** execução contra PostgreSQL real (role de runtime) cobrindo autenticação/sessão, RBAC, RLS/isolamento multi-tenant, gestão de tenants/branches/usuários, módulo de alunos, planos/matrículas/contratos (incluindo cenários de concorrência e constraints).
 
 Executar no backend:
 ```bash
