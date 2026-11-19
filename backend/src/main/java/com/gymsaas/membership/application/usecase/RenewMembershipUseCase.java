@@ -1,5 +1,6 @@
 package com.gymsaas.membership.application.usecase;
 
+import com.gymsaas.membership.application.MembershipBillingPort;
 import com.gymsaas.membership.application.MembershipDetailLoader;
 import com.gymsaas.membership.application.MembershipDraftFactory;
 import com.gymsaas.membership.application.MembershipDtos;
@@ -34,11 +35,12 @@ public class RenewMembershipUseCase {
     private final MembershipJournal journal;
     private final MembershipDetailLoader detailLoader;
     private final TenantCalendar calendar;
+    private final MembershipBillingPort billing;
 
     public RenewMembershipUseCase(MembershipGuard guard, MembershipDraftFactory drafts,
                                   MembershipRepository memberships, MembershipNumberGenerator numbers,
                                   MembershipJournal journal, MembershipDetailLoader detailLoader,
-                                  TenantCalendar calendar) {
+                                  TenantCalendar calendar, MembershipBillingPort billing) {
         this.guard = guard;
         this.drafts = drafts;
         this.memberships = memberships;
@@ -46,6 +48,7 @@ public class RenewMembershipUseCase {
         this.journal = journal;
         this.detailLoader = detailLoader;
         this.calendar = calendar;
+        this.billing = billing;
     }
 
     @Transactional
@@ -75,6 +78,7 @@ public class RenewMembershipUseCase {
         journal.record(previous, MembershipEventType.RENEWED, previous.status(), previous.status(), null, Map.of(
                 "renewalId", renewal.id().toString(),
                 "renewalRegistrationNumber", renewal.registrationNumber()), now, "MEDIUM");
+        billing.onContracted(renewal, true);
         return detailLoader.load(tenantId, renewal);
     }
 }

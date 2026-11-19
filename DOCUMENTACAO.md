@@ -147,6 +147,13 @@ O GymSaaS é um sistema de gestão para redes/academias com múltiplas unidades 
 - **Job de ciclo de vida**: processamento agendado de matrículas (ativação/expiração/descongelamento conforme configuração) considerando fuso do tenant.
 - *Frontend*: `/academy/plans`, `/academy/memberships` e `/academy/contracts/{id}`.
 
+### 8. Financeiro (`billing`) — Fase 6
+- **Cobranças**: geradas automaticamente na criação/renovação de matrícula (parcelas pelo ciclo de cobrança do snapshot; taxa de adesão só em matrícula nova) e avulsas lançadas pelo operador. Valores imutáveis (trigger); status `OPEN` → `PAID`/`CANCELLED`, `PAID` → `OPEN` no estorno. "Vencida" é derivada na consulta.
+- **Recebimentos manuais**: valor integral, forma de pagamento, data/hora, referência; no máximo um confirmado por cobrança (lock + índice único). Estorno com motivo reabre a cobrança.
+- **Cancelamento de matrícula**: cancela as cobranças em aberto a vencer; as vencidas permanecem.
+- **Resumo**: a receber, vencido, recebido por forma e estornos no período.
+- Detalhes: `docs/specs/2026-11-19-phase6-final-report.md`.
+
 ---
 
 ## Segurança, multi-tenancy e RBAC
@@ -178,6 +185,7 @@ Migrations Flyway em `backend/src/main/resources/db/migration` (aplicar sempre v
 | V10 | `tenants.timezone`, planos, preços, benefícios e permissões `plans:*` |
 | V11 | Matrículas, congelamentos, histórico, contador e permissões `memberships:*` |
 | V12 | Contratos, aceites e permissões `contracts:*` |
+| V13 | Cobranças, recebimentos, contadores, triggers de imutabilidade, RLS e permissões `charges:*`, `payments:*`, `billing:reports` |
 
 **Credenciais típicas (dev/docker):** `gymsaas_owner` (migrações) e `gymsaas_app` (runtime). RLS depende do uso da role de runtime sem privilégios de bypass.
 
@@ -204,6 +212,7 @@ Migrations Flyway em `backend/src/main/resources/db/migration` (aplicar sempre v
 | Planos | `/api/plans` | CRUD, status, preços/histórico, features |
 | Matrículas | `/api/memberships` | listagem, quote, criação, atualização, renovação, cancelamento, congelamento/suspensão/reativação, histórico |
 | Contratos | `/api/memberships/{id}/contracts`, `/api/contracts` | geração, histórico, detalhe, PDF, aceite |
+| Financeiro | `/api/charges`, `/api/payments`, `/api/billing` | listagem/detalhe/avulsa/cancelamento de cobranças, recebimento, estorno, resumo |
 
 > Para o contrato completo de campos e respostas, utilize a coleção Postman (`postman/GymSaaS-API.postman_collection.json`) e/ou o Swagger.
 
@@ -228,8 +237,9 @@ Migrations Flyway em `backend/src/main/resources/db/migration` (aplicar sempre v
 | `/academy/students/[id]` | Detalhe do aluno (abas) | conforme permissão |
 | `/academy/students/[id]/edit` | Edição do aluno | conforme permissão |
 | `/academy/plans`, `/academy/plans/[id]` | Planos e preços | `plans:read` |
-| `/academy/memberships`, `/new`, `/[id]` | Matrículas | `memberships:read` |
+| `/academy/memberships`, `/new`, `/[id]` | Matrículas (aba "Cobranças" no detalhe) | `memberships:read` |
 | `/academy/contracts/[id]` | Contrato, PDF e aceite | `contracts:read` |
+| `/academy/billing` | Financeiro: resumo, cobranças, recebimentos, estornos | `charges:read` (resumo: `billing:reports`) |
 
 ### Características de UX
 - Layout responsivo, estados de carregamento/vazio/erro, paginação e filtros onde aplicável.
@@ -334,7 +344,7 @@ Baseie-se em `.env.example`. Principais variáveis:
 ## Testes
 
 - **Unitários:** validações/utilitários, codecs/tokens, regras de domínio e fronteiras arquiteturais (ex.: ArchUnit), entre outros.
-- **Integração (`*IT`) com Testcontainers:** execução contra PostgreSQL real (role de runtime) cobrindo autenticação/sessão, RBAC, RLS/isolamento multi-tenant, gestão de tenants/branches/usuários, módulo de alunos, planos/matrículas/contratos (incluindo cenários de concorrência e constraints).
+- **Integração (`*IT`) com Testcontainers:** execução contra PostgreSQL real (role de runtime) cobrindo autenticação/sessão, RBAC, RLS/isolamento multi-tenant, gestão de tenants/branches/usuários, módulo de alunos, planos/matrículas/contratos e financeiro (incluindo cenários de concorrência e constraints). Estado em 2026-11-19: 128 unitários / 50 integração, todos verdes.
 
 Executar no backend:
 ```bash
@@ -366,7 +376,7 @@ Consulte a pasta `docs/` para materiais complementares, incluindo:
 
 - `docs/00-FASE1-SUMMARY.md` e artefatos de arquitetura/banco/gateway/Control iD
 - `docs/adrs/` — decisões arquiteturais
-- `docs/specs/` — planos, ledgers e relatórios de fases (ex.: Fase 4, Fase 5)
+- `docs/specs/` — planos, ledgers e relatórios de fases (ex.: Fase 4, Fase 5, Fase 6)
 - `docs/security/06-student-data-retention.md` — retenção e proteção de dados de alunos (LGPD)
 
 ---

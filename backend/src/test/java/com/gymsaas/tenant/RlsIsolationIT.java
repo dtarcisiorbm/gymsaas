@@ -47,7 +47,7 @@ class RlsIsolationIT extends AbstractIntegrationTest {
                 try (ResultSet result = statement.executeQuery(
                         "select count(*) from flyway_schema_history where success")) {
                     assertTrue(result.next());
-                    assertEquals(12, result.getInt(1), "all migrations must be applied");
+                    assertEquals(13, result.getInt(1), "all migrations must be applied");
                 }
                 try (ResultSet result = statement.executeQuery("""
                         select count(*) from pg_class c
@@ -63,10 +63,11 @@ class RlsIsolationIT extends AbstractIntegrationTest {
                                             'plans', 'plan_prices', 'plan_features',
                                             'membership_number_counters', 'student_memberships',
                                             'membership_freezes', 'membership_status_history',
-                                            'membership_contracts', 'contract_acceptances')
+                                            'membership_contracts', 'contract_acceptances',
+                                            'billing_number_counters', 'charges', 'payments')
                         """)) {
                     assertTrue(result.next());
-                    assertEquals(26, result.getInt(1), "RLS must be enabled on tenant-scoped tables");
+                    assertEquals(29, result.getInt(1), "RLS must be enabled on tenant-scoped tables");
                 }
             } finally {
                 resetContext(connection);

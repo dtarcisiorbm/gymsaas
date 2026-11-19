@@ -35,18 +35,21 @@ import {
   type ReasonAction,
 } from "@/features/memberships/viewmodel/MembershipDetailViewModel";
 import { describeBilling, describeDuration } from "@/features/plans/model/types";
+import { MembershipChargesTab } from "@/components/billing/MembershipChargesTab";
 
-const tabs: { id: MembershipTab; label: string }[] = [
+const allTabs: { id: MembershipTab; label: string }[] = [
   { id: "overview", label: "Condições" },
   { id: "freezes", label: "Congelamentos" },
   { id: "contracts", label: "Contratos" },
+  { id: "charges", label: "Cobranças" },
   { id: "history", label: "Histórico" },
 ];
 
 const REASON_COPY: Record<ReasonAction, { title: string; description: string; button: string; required: boolean }> = {
   cancel: {
     title: "Cancelar matrícula",
-    description: "O cancelamento é definitivo, encerra congelamento em andamento e não gera efeito financeiro.",
+    description:
+      "O cancelamento é definitivo e encerra congelamento em andamento. Cobranças em aberto com vencimento a partir de hoje são canceladas; as já vencidas permanecem em aberto.",
     button: "Cancelar matrícula",
     required: true,
   },
@@ -88,6 +91,7 @@ function MembershipDetailContent() {
   }, [viewModel, params.id]);
 
   const m = state.membership;
+  const tabs = allTabs.filter((tab) => tab.id !== "charges" || can("charges:read", "payment:read"));
   const actions = m ? availableActions(m) : null;
   const policy = m?.conditions.freezePolicy;
   const modalError = state.modal !== "none" && state.error ? <div className="mb-4"><Alert>{state.error}</Alert></div> : null;
@@ -319,6 +323,8 @@ function MembershipDetailContent() {
               )}
             </section>
           ) : null}
+
+          {state.tab === "charges" ? <MembershipChargesTab membershipId={m.id} studentId={m.studentId} /> : null}
 
           {state.tab === "history" ? (
             <section className={`${panelClass} p-5`}>

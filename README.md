@@ -62,6 +62,17 @@ docker-compose.yml
   descongelar, suspender, reativar, renovar, cancelar e histórico, e `/academy/contracts/{id}` (PDF autenticado
   e aceite presencial com SHA-256 do conteúdo verificado no navegador). Ações aparecem conforme as permissões.
 
+## Fase 6 — financeiro (cobranças e recebimentos manuais)
+
+- Módulo `com.gymsaas.billing`; migration `V13` (`charges`, `payments`, contadores, triggers de imutabilidade, RLS).
+- Parcelas geradas automaticamente ao criar/renovar matrícula (valor por ciclo do snapshot; taxa de adesão só na
+  matrícula nova). Cancelar a matrícula cancela as cobranças em aberto a vencer; as vencidas continuam como dívida.
+- "Vencida" é derivada (em aberto com vencimento anterior a hoje no fuso da academia) — sem job e sem bloqueio.
+- Recebimento manual integral (dinheiro, PIX, cartões, transferência, outro), estorno com motivo, cobrança avulsa e
+  resumo do período. Sem gateway de pagamento.
+- Frontend: `/academy/billing`, aba "Cobranças" na matrícula e atalho "Financeiro" no aluno.
+- Endpoints, regras e testes: `docs/specs/2026-11-19-phase6-final-report.md`.
+
 ## Subir a stack
 
 ```bash
@@ -215,6 +226,8 @@ Migrations em `backend/src/main/resources/db/migration`:
 - `V10` `tenants.timezone`, planos, histórico de preços, benefícios, permissões `plans:*`
 - `V11` matrículas, congelamentos, histórico, contador de matrícula, permissões `memberships:*`
 - `V12` contratos e aceites, permissões `contracts:*`
+- `V13` cobranças, recebimentos, contadores `C`/`R`, triggers de imutabilidade, RLS e permissões
+  `charges:*`, `payments:*`, `billing:reports`
 
 Duas credenciais de banco: `gymsaas_owner` (Flyway/superuser local) e `gymsaas_app`
 (runtime, `NOSUPERUSER NOBYPASSRLS`). RLS só é efetiva para o segundo.

@@ -13,7 +13,7 @@ import {
   type RenewInput,
 } from "@/features/memberships/model/types";
 
-export type MembershipTab = "overview" | "freezes" | "contracts" | "history";
+export type MembershipTab = "overview" | "freezes" | "contracts" | "charges" | "history";
 export type ReasonAction = "cancel" | "suspend" | "reactivate" | "unfreeze";
 export type MembershipModal = "none" | ReasonAction | "freeze" | "renew" | "edit";
 

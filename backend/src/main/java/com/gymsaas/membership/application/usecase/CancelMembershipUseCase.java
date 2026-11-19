@@ -1,5 +1,6 @@
 package com.gymsaas.membership.application.usecase;
 
+import com.gymsaas.membership.application.MembershipBillingPort;
 import com.gymsaas.membership.application.MembershipDetailLoader;
 import com.gymsaas.membership.application.MembershipDtos;
 import com.gymsaas.membership.application.MembershipGuard;
@@ -23,8 +24,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Cancels with mandatory reason, timestamp and responsible user. No financial
- * effect in this phase (refunds belong to the financial module). An active
+ * Cancels with mandatory reason, timestamp and responsible user. Future OPEN
+ * charges are cancelled by the billing module (Phase 6, decision F7); refunds
+ * of paid charges stay a manual billing action. An active
  * freeze is closed so the freeze history stays consistent.
  */
 @Service
@@ -36,16 +38,19 @@ public class CancelMembershipUseCase {
     private final MembershipJournal journal;
     private final MembershipDetailLoader detailLoader;
     private final TenantCalendar calendar;
+    private final MembershipBillingPort billing;
 
     public CancelMembershipUseCase(MembershipGuard guard, MembershipRepository memberships,
                                    MembershipFreezeRepository freezes, MembershipJournal journal,
-                                   MembershipDetailLoader detailLoader, TenantCalendar calendar) {
+                                   MembershipDetailLoader detailLoader, TenantCalendar calendar,
+                                   MembershipBillingPort billing) {
         this.guard = guard;
         this.memberships = memberships;
         this.freezes = freezes;
         this.journal = journal;
         this.detailLoader = detailLoader;
         this.calendar = calendar;
+        this.billing = billing;
     }
 
     @Transactional
@@ -71,6 +76,7 @@ public class CancelMembershipUseCase {
         Membership saved = memberships.save(toSave.withCancellation(now, actor, reason));
         journal.record(saved, MembershipEventType.CANCELLED, current.status(), MembershipStatus.CANCELLED, reason,
                 metadata, now, "HIGH");
+        billing.onCancelled(saved, today, reason);
         return detailLoader.load(tenantId, saved);
     }
 }

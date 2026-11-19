@@ -65,6 +65,14 @@
     {
       "key": "contractId",
       "value": ""
+    },
+    {
+      "key": "chargeId",
+      "value": ""
+    },
+    {
+      "key": "paymentId",
+      "value": ""
     }
   ],
   "item": [
@@ -3106,6 +3114,310 @@
                 }
               }
             }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Financeiro",
+      "item": [
+        {
+          "name": "Listar cobranças",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/charges?page=0&size=20&status=&studentId=&membershipId=&branchId=&dueFrom=&dueTo=&search=&sort=dueDate&direction=asc",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "charges"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                },
+                {
+                  "key": "status",
+                  "value": ""
+                },
+                {
+                  "key": "studentId",
+                  "value": ""
+                },
+                {
+                  "key": "membershipId",
+                  "value": ""
+                },
+                {
+                  "key": "branchId",
+                  "value": ""
+                },
+                {
+                  "key": "dueFrom",
+                  "value": ""
+                },
+                {
+                  "key": "dueTo",
+                  "value": ""
+                },
+                {
+                  "key": "search",
+                  "value": ""
+                },
+                {
+                  "key": "sort",
+                  "value": "dueDate"
+                },
+                {
+                  "key": "direction",
+                  "value": "asc"
+                }
+              ]
+            },
+            "description": "Status: OPEN, PAID, CANCELLED ou OVERDUE (derivado: OPEN com vencimento anterior a hoje no fuso da academia). Permissão charges:read ou payment:read."
+          },
+          "response": []
+        },
+        {
+          "name": "Detalhe da cobrança",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/charges/{{chargeId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "charges",
+                "{{chargeId}}"
+              ]
+            },
+            "description": "Retorna { charge, payments }."
+          },
+          "response": []
+        },
+        {
+          "name": "Lançar cobrança avulsa",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/charges",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "charges"
+              ]
+            },
+            "description": "charges:create. Valor como string decimal com ponto (\"25.00\").",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"studentId\": \"{{studentId}}\",\n  \"branchId\": \"{{branchId}}\",\n  \"membershipId\": null,\n  \"description\": \"Diária\",\n  \"amount\": \"25.00\",\n  \"dueDate\": \"2026-11-30\",\n  \"notes\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancelar cobrança",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/charges/{{chargeId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "charges",
+                "{{chargeId}}",
+                "cancel"
+              ]
+            },
+            "description": "charges:cancel. Somente cobranças OPEN; motivo obrigatório.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Lançada por engano\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar recebimento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/charges/{{chargeId}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "charges",
+                "{{chargeId}}",
+                "payments"
+              ]
+            },
+            "description": "payments:register. Valor deve ser igual ao da cobrança (sem pagamento parcial). method: CASH, PIX, CREDIT_CARD, DEBIT_CARD, BANK_TRANSFER, OTHER. paidAt opcional (padrão: agora).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": \"25.00\",\n  \"method\": \"PIX\",\n  \"paidAt\": null,\n  \"reference\": \"E2E123\",\n  \"notes\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Estornar recebimento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/payments/{{paymentId}}/refund",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "payments",
+                "{{paymentId}}",
+                "refund"
+              ]
+            },
+            "description": "payments:refund. Recebimento vira REFUNDED e a cobrança volta a OPEN.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Pagamento em duplicidade\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resumo financeiro",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{accessToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/summary?from=&to=&branchId=",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "billing",
+                "summary"
+              ],
+              "query": [
+                {
+                  "key": "from",
+                  "value": ""
+                },
+                {
+                  "key": "to",
+                  "value": ""
+                },
+                {
+                  "key": "branchId",
+                  "value": ""
+                }
+              ]
+            },
+            "description": "billing:reports. Padrão: mês corrente. A receber (aberto, não vencido, no período), vencido (todo o aberto antes de hoje), recebido por forma e estornos no período."
           },
           "response": []
         }

@@ -7,6 +7,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { Alert } from "@/components/ui/Alert";
 import { Spinner } from "@/components/ui/Loading";
 import { useViewModel } from "@/core/mvvm/useViewModel";
+import { usePermission } from "@/core/session/usePermission";
 import {
   EMPTY_DOCUMENT_FORM,
   STUDENT_STATUS_LABELS,
@@ -46,6 +47,7 @@ export default function StudentDetailPage() {
   const id = params.id;
   const viewModel = useMemo(() => new StudentDetailViewModel(), []);
   const state = useViewModel(viewModel);
+  const can = usePermission();
 
   useEffect(() => { void viewModel.load(id); }, [viewModel, id]);
 
@@ -70,6 +72,9 @@ export default function StudentDetailPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <Link href={`/academy/memberships?studentId=${id}`} className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white">Matrículas</Link>
+              {can("charges:read", "payment:read") ? (
+                <Link href={`/academy/billing?studentId=${id}`} className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white">Financeiro</Link>
+              ) : null}
               <Link href={`/academy/memberships/new?studentId=${id}`} className="rounded-xl border border-accent-500/30 bg-accent-500/10 px-4 py-2 text-sm font-semibold text-accent-400 transition hover:bg-accent-500/20">Nova matrícula</Link>
               <Link href={`/academy/students/${id}/edit`} className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white">Editar</Link>
               <Link href="/academy/students" className="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:text-white">Voltar</Link>

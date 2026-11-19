@@ -34,6 +34,12 @@ export function AppNav() {
   if (session.activeTenantId && (permissions.has("memberships:read") || session.platformAdmin)) {
     items.push({ href: "/academy/memberships", label: "Matrículas" });
   }
+  if (
+    session.activeTenantId &&
+    (permissions.has("charges:read") || permissions.has("payment:read") || session.platformAdmin)
+  ) {
+    items.push({ href: "/academy/billing", label: "Financeiro" });
+  }
   if (session.activeTenantId && (permissions.has("users:read") || session.platformAdmin)) {
     items.push({ href: "/academy/users", label: "Usuários" });
   }

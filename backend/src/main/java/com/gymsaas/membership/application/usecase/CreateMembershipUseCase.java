@@ -1,5 +1,6 @@
 package com.gymsaas.membership.application.usecase;
 
+import com.gymsaas.membership.application.MembershipBillingPort;
 import com.gymsaas.membership.application.MembershipDetailLoader;
 import com.gymsaas.membership.application.MembershipDraftFactory;
 import com.gymsaas.membership.application.MembershipDtos;
@@ -28,16 +29,19 @@ public class CreateMembershipUseCase {
     private final MembershipJournal journal;
     private final MembershipDetailLoader detailLoader;
     private final TenantCalendar calendar;
+    private final MembershipBillingPort billing;
 
     public CreateMembershipUseCase(MembershipDraftFactory drafts, MembershipRepository memberships,
                                    MembershipNumberGenerator numbers, MembershipJournal journal,
-                                   MembershipDetailLoader detailLoader, TenantCalendar calendar) {
+                                   MembershipDetailLoader detailLoader, TenantCalendar calendar,
+                                   MembershipBillingPort billing) {
         this.drafts = drafts;
         this.memberships = memberships;
         this.numbers = numbers;
         this.journal = journal;
         this.detailLoader = detailLoader;
         this.calendar = calendar;
+        this.billing = billing;
     }
 
     @Transactional
@@ -54,6 +58,7 @@ public class CreateMembershipUseCase {
                 "finalAmount", saved.conditions().finalAmount().toPlainString(),
                 "startDate", saved.startDate().toString(),
                 "endDate", saved.endDate().toString()), saved.createdAt(), "MEDIUM");
+        billing.onContracted(saved, false);
         return detailLoader.load(tenantId, saved);
     }
 

@@ -7,11 +7,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +37,21 @@ public class GlobalExceptionHandler {
                 .forEach(error -> fields.put(error.getField(), error.getDefaultMessage()));
         return ResponseEntity.badRequest().body(ErrorResponse.of(400, "VALIDATION_ERROR",
                 "Dados inválidos.", request.getRequestURI(), fields));
+    }
+
+    /** Unparseable body (e.g. "25,00" in a decimal field, invalid date/UUID): client error, not 500. */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleUnreadable(HttpMessageNotReadableException exception,
+                                                          HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(ErrorResponse.of(400, "MALFORMED_REQUEST",
+                "Corpo da requisição inválido.", request.getRequestURI()));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException exception,
+                                                            HttpServletRequest request) {
+        return ResponseEntity.badRequest().body(ErrorResponse.of(400, "INVALID_PARAMETER",
+                "Parâmetro inválido: " + exception.getName() + ".", request.getRequestURI()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
