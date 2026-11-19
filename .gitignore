@@ -1,0 +1,7 @@
+# TypeScript incremental build cache
+*.tsbuildinfo
+
+# graphify: version only the report and the graph; caches/state are local
+graphify-out/*
+!graphify-out/GRAPH_REPORT.md
+!graphify-out/graph.json
